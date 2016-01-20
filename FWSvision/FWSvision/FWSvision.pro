@@ -8,3 +8,6 @@ SOURCES += main.c
 include(deployment.pri)
 qtcAddDeployment()
 
+HEADERS += \
+    FwsVision.h
+

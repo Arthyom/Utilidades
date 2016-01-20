@@ -16,7 +16,6 @@
         /******************************************/
         /******** contenedor imagen BmP   *********/
         /******************************************/
-
         typedef struct {
 
             /****** cabecera de la imagen ********/
@@ -44,15 +43,18 @@
             int         imagenPxMV;     // pixeles por metro vertical
             int         imagenClrUs;    // cantidad de colores usados
             int         imagenClrImp;   // cantidad de colores importantes
+
             unsigned char **     imagenMtrzPxlR;  // matriz de pixeles para la imagen
             unsigned char **     imagenMtrzPxlG;  // matriz de pixeles para la imagen
             unsigned char **     imagenMtrzPxlB;  // matriz de pixeles para la imagen
 
         }contenedorBmp;
 
+
         /******************************************/
         /******** prototips y declaracion *********/
         /******************************************/
+
         // FUNCIONES MISELANEAS
         contenedorBmp *     crearContenedor           ( ){
 
@@ -82,7 +84,6 @@
                     matriz[i][j] = '0';
 
             return matriz;
-
         }
 
         void                mostrarImagenes           ( contenedorBmp * contenedorEntrada, contenedorBmp * conentenedorSalida, char *nombreDestino ){
@@ -191,10 +192,10 @@
                 {
                     for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
                     {
-                        fread(&r,sizeof(char),1,nuevaImagenBmp);
+                        fread(&g,sizeof(char),1,nuevaImagenBmp);
 
 
-                        nuevoContenedor->imagenMtrzPxlB[i][j] = r;
+                        nuevoContenedor->imagenMtrzPxlG[i][j] = g;
                       //  nuevoContenedor->imagenMtrzPxl[i][j] = (b+g+r)/3;
 
                     }
@@ -204,10 +205,10 @@
                 {
                     for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
                     {
-                        fread(&r,sizeof(char),1,nuevaImagenBmp);
+                        fread(&b,sizeof(char),1,nuevaImagenBmp);
 
 
-                        nuevoContenedor->imagenMtrzPxlG[i][j] = r;
+                        nuevoContenedor->imagenMtrzPxlB[i][j] = b;
                       //  nuevoContenedor->imagenMtrzPxl[i][j] = (b+g+r)/3;
 
                     }
@@ -274,7 +275,7 @@
                 {
                     for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
                     {
-                        fwrite(&bmpEntrada->imagenMtrzPxlB[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&bmpEntrada->imagenMtrzPxlR[i][j],sizeof(char),1,nuevaImagenSalida);
 
                     }
                 }
@@ -292,7 +293,7 @@
                 {
                     for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
                     {
-                        fwrite(&bmpEntrada->imagenMtrzPxlR[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&bmpEntrada->imagenMtrzPxlB[i][j],sizeof(char),1,nuevaImagenSalida);
 
                     }
                 }
