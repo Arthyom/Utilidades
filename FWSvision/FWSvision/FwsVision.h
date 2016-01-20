@@ -20,8 +20,9 @@
 
             /****** cabecera de la imagen ********/
 
-            FILE *      nombreRuta;     // ruta o nombre de la imagen
+            char *      nombreRuta;     // ruta o nombre de la imagen
             int         vectorDims;     // dimenciones para un vector de imagenes BMP
+            char        nmbrRtSv;       // ruta o nombre de guardado
 
             char *      imagenTipo;     // tipo de imagen BMP, JPEG etc
             int         imagenDims;     // tamanio de la imagen en bytes
@@ -67,6 +68,23 @@
 
         }
 
+        char **             crearMatriz               ( int dimsX, int dimsY ){
+
+            // reservar una nueva matriz
+            char ** matriz = (char**) malloc(sizeof(char*) * dimsX);
+            int i,j;
+            for ( i = 0 ; i < dimsX ; i ++ )
+                matriz[i] = (char*) malloc (sizeof(char) * dimsY);
+
+            // iniciar la matriz a algo conocido
+            for ( i = 0 ; i < dimsX ; i ++ )
+                for ( j = 0 ; j < dimsY ; j ++ )
+                    matriz[i][j] = '0';
+
+            return matriz;
+
+        }
+
         // FUNCIONES DE CARGAR DE IMAGENES BMP
         contenedorBmp *     cargarImagenBmp          ( char * nombreImagen ){
 
@@ -101,7 +119,28 @@
                 fread(&nuevoContenedor->imagenClrUs, sizeof(int),1,nuevaImagenBmp);
                 fread(&nuevoContenedor->imagenClrImp, sizeof(int),1,nuevaImagenBmp);
 
-                // pasar l
+                // pasar de la imagen a la matriz del contenedor
+                char ** nuevaMatriz = crearMatriz(nuevoContenedor->imagenAlto, nuevoContenedor->imagenAncho);
+
+                int i, j ;
+                char r,g,b;
+                for ( i = 0 ; i < nuevoContenedor->imagenAlto ; i ++ )
+                {
+                    for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
+                    {
+                        fread(&b,sizeof(char),1,nuevaImagenBmp);
+                        fread(&g,sizeof(char),1,nuevaImagenBmp);
+                        fread(&r,sizeof(char),1,nuevaImagenBmp);
+
+                        nuevoContenedor->imagenMtrzPxl[i][j] = r+g+b / 3;
+
+                    }
+                }
+
+                // cerrar el archivo y regresar la imagen ya cargada
+                fclose(nuevaImagenBmp);
+                return nuevoContenedor;
+
 
 
             }
@@ -109,12 +148,63 @@
                 return NULL;
         }
 
-        contenedorBmp *    cargarImagenesBmp        ( char * nombreImagenes, int dims );
+        contenedorBmp *    cargarImagenesBmp         ( char * nombreImagenes, int dims );
 
 
 
         // FUNIONES DE ESCITURA DE IMAGENES BMP
-        int       guardarImagenBmp          ( );
+        int       guardarImagenBmp          ( contenedorBmp * bmpEntrada, char * nombreSalida ){
+
+            // crear el nuevo archivo
+            FILE * nuevaImagenSalida = fopen( nombreSalida, "wb+");
+
+            // verificar si se ha podifo salvar la imagen
+            if ( nuevaImagenSalida ){
+
+                // crear contenedor para la imagen de salida
+                contenedorBmp * nuevoContenedorSalida = crearContenedor();
+
+                // leer la imagen indicada
+                fwrite(&nuevoContenedorSalida->imagenTipo,sizeof(char),2,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenDims,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenResrv,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenOffst,sizeof(int),1,nuevaImagenSalida);
+
+                fwrite(&nuevoContenedorSalida->imagenMtrzPxl ,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenAlto,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenAncho,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenNmPlns,sizeof(int),1,nuevaImagenSalida);
+
+                fwrite(&nuevoContenedorSalida->imagenPrfClr,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenTpCmp,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenDEstr,sizeof(int),1,nuevaImagenSalida);
+
+                fwrite(&nuevoContenedorSalida->imagenPxMH,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenPxMV,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenClrUs,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&nuevoContenedorSalida->imagenClrImp,sizeof(int),1,nuevaImagenSalida);
+
+                // mover la matriz del contenedor de entrada al contenedor de salida
+                int i, j ;
+
+                for ( i = 0 ; i < bmpEntrada->imagenAlto ; i ++ )
+                {
+                    for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
+                    {
+                        fwrite(&nuevoContenedorSalida->imagenMtrzPxl[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&nuevoContenedorSalida->imagenMtrzPxl[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&nuevoContenedorSalida->imagenMtrzPxl[i][j],sizeof(char),1,nuevaImagenSalida);
+                    }
+                }
+
+                // cerrar el archivo y regresar estado
+                fclose(nuevaImagenSalida);
+                return 0;
+            }
+            else
+                return 1;
+        }
+
         int       guardarImagenesBmp()      ( );
 
 
