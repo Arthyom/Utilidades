@@ -2,21 +2,20 @@
 
 int main(void)
 {
-    printf(" \"hola\" ");
-    // cargar imagenes
 
-      /* hacer otras cosas */
-        contenedorBmp* entradaBmp = cargarImagenBmp("C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/cpt.bmp","cpt.bmp" );
+      // cargar imagen
+    //  contenedorBmp* entradaBmp = FwsVcargarImagenBmpColor("C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/rd.bmp","rd.bmp" );
 
-        // guadar imagenes
-     contenedorBmp * salidaBmp  = guardarImagenBmp(entradaBmp,"C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/cpts.bmp","cpts.bmp");
+     // guadar imagenes
+   //  contenedorBmp * salidaBmp  = FwsVguardarImagenBmpColor(entradaBmp,"C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/rd.bmp","rds.bmp");
 
-     mostrarImagenes(entradaBmp, salidaBmp, "C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/muestra.html" );
-      /* verificar si ya pasó un segundo */
+     // mostrar imagenes
+   //  FwsVmostrarImagenes('@',entradaBmp, salidaBmp, "C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/htmlView.html" );
 
-printf("-------->");
-   //imprimirMatriz(*entradaBmp);
+    contenedorBmp * vectorContendores = FwsVcargarImagenesBmpColor(3,"rutas","nombre1","nombre2","nombre3");
 
+       FwsVimprmrRutas(vectorContendores,3);
+    return 0;
 
 }
 

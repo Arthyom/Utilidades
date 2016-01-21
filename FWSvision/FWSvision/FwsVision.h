@@ -10,6 +10,7 @@
     # include <stdio.h>
     # include <stdlib.h>
     # include <stdarg.h>
+    # include <string.h>
     # include <math.h>
     # include <time.h>
 
@@ -25,7 +26,7 @@
             int         vectorDims;     // dimenciones para un vector de imagenes BMP
             char        nmbrRtSv;       // ruta o nombre de guardado
 
-            char        imagenTipo [2];     // tipo de imagen BMP, JPEG etc
+            char        imagenTipo [2]; // tipo de imagen BMP, JPEG etc
             int         imagenDims;     // tamanio de la imagen en bytes
             int         imagenResrv;
             int         imagenOffst;    // despalazamiento hasta los datos
@@ -56,7 +57,7 @@
         /******************************************/
 
         // FUNCIONES MISELANEAS
-        contenedorBmp *     crearContenedor           ( ){
+        contenedorBmp *     FwsVcrearContenedor           ( ){
 
             // crear un nuevo contnedor
             contenedorBmp * nuevoContenedor = ( contenedorBmp * ) malloc ( sizeof(contenedorBmp));
@@ -66,11 +67,9 @@
             nuevoContenedor->vectorDims = 0;
 
             return nuevoContenedor;
-
-
         }
 
-        char **             crearMatriz               ( int dimsX, int dimsY ){
+        char **             FwsVcrearMatriz               ( int dimsX, int dimsY ){
 
             // reservar una nueva matriz
             char ** matriz = (char**) malloc(sizeof(char*) * dimsX);
@@ -86,48 +85,64 @@
             return matriz;
         }
 
-        void                mostrarImagenes           ( contenedorBmp * contenedorEntrada, contenedorBmp * conentenedorSalida, char *nombreDestino ){
+        void                FwsVmostrarImagenes           ( char identificador, contenedorBmp * contenedorEntrada, contenedorBmp * contenedorSalida, char *nombreDestino ){
 
-            // crear archivo html para incrustar las imagenes creadas
-            FILE * archivo = fopen(nombreDestino,"w");
-            char html [] = "<!DOCTYPE html><html><head><title> muestra de imagenes </title></head><boy><div><img src = \"%s \"> entrada<br><img src= \" %s \"> salida</div></body></html>";
+            /******** la funcion toma un html como plantilla donde buscara el caracter #
+                   sera cambiado por el nombre de las imagenes bmp de entrada y salida
+                   el html del archivo plantilla sera pasado a un segundo archivo
+                   con el nombre destino que se le proporcione a la funcion los caracteres #
+                   son intercambiado por el nobre de la imagen ********/
 
-            fprintf(archivo,html,contenedorEntrada->nombreImagen, conentenedorSalida->nombreImagen);
-            fclose(archivo);
-            system(nombreDestino);
+            FILE * plantillaHtml  = fopen("C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/plantillaHtml.html","r");
+            FILE * archivoDestino = fopen(nombreDestino,"w");
 
+            int imagenDestino= 1;
 
+            // mover caracteres de plantilla a destino y cambiar # por nombres de imagenes
+            while ( !feof(plantillaHtml) ){
+                char caracterExtraido = fgetc(plantillaHtml);
+                if (caracterExtraido != identificador)
+                    fputc(caracterExtraido,archivoDestino);
+                else
+                {
+                    switch (imagenDestino){
+                        case 1:
+                            fprintf(archivoDestino," \" %s \" ",contenedorEntrada->nombreImagen);
+                            imagenDestino++;
+                        break;
 
+                        case 2:
+                            fprintf(archivoDestino," \" %s \" ",contenedorSalida->nombreImagen);
+                            imagenDestino++;
+                        break;
 
-
-
-        }
-
-        void                esperar                   ( int retardo ){
-
-            while (1) {
-
-            clock_t tInicio, tFinal;
-            int segun = 0;
-
-            tInicio = clock() + CLOCKS_PER_SEC;
-
-                printf("%d", ++segun);
-                tFinal = tInicio + CLOCKS_PER_SEC;
-
+                    }
+                }
             }
 
+            // cerrar plantilla y mostrar archivo destino
+            fclose(plantillaHtml);
+            fclose(archivoDestino);
+            system(nombreDestino);
+        }
+
+        void                FwsVimprmrRutas               ( contenedorBmp *vectorContenedorBmp, int dims ){
+
+            // recorrer cada uno de los elementos del vecotor
+            int i;
+            for ( i = 0 ; i < dims ; i ++ )
+                printf("%s \n", &vectorContenedorBmp[i].nombreImagen);
         }
 
         // FUNCIONES DE CARGAR DE IMAGENES BMP
-        contenedorBmp *     cargarImagenBmp          ( char * nombreImagen,char * nombreImagene ){
+        contenedorBmp *     FwsVcargarImagenBmpColor          ( char * nombreImagen,char * nombreImagene ){
 
             // intentar cargar ruta especificada
             FILE * nuevaImagenBmp = fopen( nombreImagen, "rb+");
             if (  nuevaImagenBmp ){
 
                 // crear contenedor para la nueva imagen
-                contenedorBmp * nuevoContenedor = crearContenedor();
+                contenedorBmp * nuevoContenedor = FwsVcrearContenedor();
 
                 // leer datos extra
                 nuevoContenedor->nombreRuta = nombreImagen;
@@ -154,85 +169,72 @@
                 fread(&nuevoContenedor->imagenPxMV, sizeof(int),1,nuevaImagenBmp);
                 fread(&nuevoContenedor->imagenClrUs, sizeof(int),1,nuevaImagenBmp);
                 fread(&nuevoContenedor->imagenClrImp, sizeof(int),1,nuevaImagenBmp);
+
                 //if(nuevoContenedor->imagenPrfClr != 24 )
                   //  exit(1);
 
                 // pasar de la imagen a la matriz del contenedor
                 int i,j;
 
-                /********** codigo peligroso ************/
-                nuevoContenedor->imagenMtrzPxlB = (char **) malloc(sizeof(char**)* nuevoContenedor->imagenAlto);
-                for (i=0; i<nuevoContenedor->imagenAlto;i++)
-                    nuevoContenedor->imagenMtrzPxlB[i] =(char*) malloc(sizeof(char)*nuevoContenedor->imagenAncho);
-
-                nuevoContenedor->imagenMtrzPxlR = (char **) malloc(sizeof(char**)* nuevoContenedor->imagenAlto);
-                for (i=0; i<nuevoContenedor->imagenAlto;i++)
-                    nuevoContenedor->imagenMtrzPxlR[i] =(char*) malloc(sizeof(char)*nuevoContenedor->imagenAncho);
-
-                nuevoContenedor->imagenMtrzPxlG = (char **) malloc(sizeof(char**)* nuevoContenedor->imagenAlto);
-                for (i=0; i<nuevoContenedor->imagenAlto;i++)
-                    nuevoContenedor->imagenMtrzPxlG[i] =(char*) malloc(sizeof(char)*nuevoContenedor->imagenAncho);
+                // crear las 3 metrices R,G,B
+                nuevoContenedor->imagenMtrzPxlR = FwsVcrearMatriz( nuevoContenedor->imagenAlto, nuevoContenedor->imagenAncho);
+                nuevoContenedor->imagenMtrzPxlG = FwsVcrearMatriz( nuevoContenedor->imagenAlto, nuevoContenedor->imagenAncho);
+                nuevoContenedor->imagenMtrzPxlB = FwsVcrearMatriz( nuevoContenedor->imagenAlto, nuevoContenedor->imagenAncho);
 
 
+                // recolectar datos de la imagen para las matricez
                 char r,g,b;
                 for ( i = 0 ; i < nuevoContenedor->imagenAlto ; i ++ )
                 {
                     for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
                     {
                         fread(&r,sizeof(char),1,nuevaImagenBmp);
-
-
-                        nuevoContenedor->imagenMtrzPxlR[i][j] = r;
-                      //  nuevoContenedor->imagenMtrzPxl[i][j] = (b+g+r)/3;
-
-                    }
-                }
-
-                for ( i = 0 ; i < nuevoContenedor->imagenAlto ; i ++ )
-                {
-                    for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
-                    {
                         fread(&g,sizeof(char),1,nuevaImagenBmp);
-
-
-                        nuevoContenedor->imagenMtrzPxlG[i][j] = g;
-                      //  nuevoContenedor->imagenMtrzPxl[i][j] = (b+g+r)/3;
-
-                    }
-                }
-
-                for ( i = 0 ; i < nuevoContenedor->imagenAlto ; i ++ )
-                {
-                    for ( j = 0 ; j < nuevoContenedor->imagenAncho ; j ++ )
-                    {
                         fread(&b,sizeof(char),1,nuevaImagenBmp);
 
 
+                        nuevoContenedor->imagenMtrzPxlR[i][j] = r;
+                        nuevoContenedor->imagenMtrzPxlG[i][j] = g;
                         nuevoContenedor->imagenMtrzPxlB[i][j] = b;
-                      //  nuevoContenedor->imagenMtrzPxl[i][j] = (b+g+r)/3;
-
                     }
                 }
-
-                /******************* codigo peligroso *********************/
 
                 // cerrar el archivo y regresar la imagen ya cargada
                 fclose(nuevaImagenBmp);
                 return nuevoContenedor;
-
-
-
             }
             else
                 return NULL;
         }
 
-        contenedorBmp *    cargarImagenesBmp         ( char * nombreImagenes, int dims );
+
+        contenedorBmp **    FwsVcargarImagenesBmpColor        ( int dims, char *nombreRuta, ... ){
+
+            // crear un vector de contenedores vacios
+            contenedorBmp * vectorContendores = (contenedorBmp*) malloc( sizeof(contenedorBmp) *dims );
+            int i  ;
+
+
+
+            // mover parametros a cada contenedor del vector
+            va_list listaDatos;
+            va_start(listaDatos,nombreRuta);
+            char *var = va_arg(listaDatos,char*);
+
+            for ( i= 0; i < dims; i++ ){
+
+                strcpy(&vectorContendores[i].nombreImagen,var);
+                var = va_arg(listaDatos,char*);
+            }
+            va_end(listaDatos);
+
+            return vectorContendores;
+        }
 
 
 
         // FUNIONES DE ESCITURA DE IMAGENES BMP
-        contenedorBmp *      guardarImagenBmp          ( contenedorBmp * bmpEntrada, char * nombreSalida, char *nombreImagens ){
+        contenedorBmp *     FwsVguardarImagenBmpColor         ( contenedorBmp * bmpEntrada, char * nombreSalida, char *nombreImagens ){
 
             // crear el nuevo archivo
             FILE * nuevaImagenSalida = fopen( nombreSalida, "wb+");
@@ -241,7 +243,7 @@
             if ( nuevaImagenSalida ){
 
                 // crear contenedor para la imagen de salida
-                contenedorBmp * nuevoContenedorSalida = crearContenedor();
+                contenedorBmp * nuevoContenedorSalida = FwsVcrearContenedor();
                 nuevoContenedorSalida->nombreRuta   = nombreSalida;
                 nuevoContenedorSalida->nombreImagen = nombreImagens;
 
@@ -276,28 +278,11 @@
                     for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
                     {
                         fwrite(&bmpEntrada->imagenMtrzPxlR[i][j],sizeof(char),1,nuevaImagenSalida);
-
-                    }
-                }
-
-                for ( i = 0 ; i < bmpEntrada->imagenAlto ; i ++ )
-                {
-                    for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
-                    {
                         fwrite(&bmpEntrada->imagenMtrzPxlG[i][j],sizeof(char),1,nuevaImagenSalida);
-
-                    }
-                }
-
-                for ( i = 0 ; i < bmpEntrada->imagenAlto ; i ++ )
-                {
-                    for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
-                    {
                         fwrite(&bmpEntrada->imagenMtrzPxlB[i][j],sizeof(char),1,nuevaImagenSalida);
 
                     }
                 }
-
 
                 // cerrar el archivo y regresar estado
                 fclose(nuevaImagenSalida);
