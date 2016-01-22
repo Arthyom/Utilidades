@@ -14,6 +14,8 @@
     # include <math.h>
     # include <time.h>
 
+    # define RUTA_DIR "C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/"
+
         /******************************************/
         /******** contenedor imagen BmP   *********/
         /******************************************/
@@ -23,6 +25,7 @@
 
             char *      nombreRuta;     // ruta o nombre de la imagen
             char *      nombreImagen;   //
+            char *      nombreCompleto; // ruta + nombre de la imagen
             int         vectorDims;     // dimenciones para un vector de imagenes BMP
             char        nmbrRtSv;       // ruta o nombre de guardado
 
@@ -52,11 +55,19 @@
         }contenedorBmp;
 
 
-        /******************************************/
-        /******** prototips y declaracion *********/
-        /******************************************/
+        /**********************************************************/
+        /**************** prototips y declaracion *****************/
+        /**********************************************************/
+
+
+
+
+
+#endif // FWSVISION_H
 
         // FUNCIONES MISELANEAS
+
+        // lista
         contenedorBmp *     FwsVcrearContenedor           ( ){
 
             // crear un nuevo contnedor
@@ -69,6 +80,7 @@
             return nuevoContenedor;
         }
 
+        // limpia
         char **             FwsVcrearMatriz               ( int dimsX, int dimsY ){
 
             // reservar una nueva matriz
@@ -85,6 +97,7 @@
             return matriz;
         }
 
+        // lista
         void                FwsVmostrarImagenes           ( char identificador, contenedorBmp * contenedorEntrada, contenedorBmp * contenedorSalida, char *nombreDestino ){
 
             /******** la funcion toma un html como plantilla donde buscara el caracter #
@@ -126,7 +139,8 @@
             system(nombreDestino);
         }
 
-        void                FwsVimprmrRutas               ( contenedorBmp *vectorContenedorBmp, int dims ){
+        // lista
+        void                FwsVimprmrRutas               ( contenedorBmp * vectorContenedorBmp, int dims ){
 
             // recorrer cada uno de los elementos del vecotor
             int i;
@@ -134,19 +148,141 @@
                 printf("%s \n", &vectorContenedorBmp[i].nombreImagen);
         }
 
-        // FUNCIONES DE CARGAR DE IMAGENES BMP
-        contenedorBmp *     FwsVcargarImagenBmpColor          ( char * nombreImagen,char * nombreImagene ){
+        // lista
+        void                FwsVmostrarImagen             ( contenedorBmp * contenedorEntrada, char identificador, char *nombreDestino ){
+
+            FILE * plantillaHtml  = fopen("C:/Users/frodo/Documents/herramientas/Utilidades/FWSvision/FWSvision/plantillaHtml.html","r");
+            FILE * archivoDestino = fopen(nombreDestino,"w");
+
+            while ( !feof(plantillaHtml) ){
+                char caracterExtraido = fgetc(plantillaHtml);
+                if (caracterExtraido != identificador)
+                    fputc(caracterExtraido,archivoDestino);
+                else
+                    fprintf(archivoDestino," \" %s \" ",archivoDestino);
+            }
+
+            fclose(plantillaHtml);
+            fclose(archivoDestino);
+            system(nombreDestino);
+
+        }
+
+        contenedorBmp *     FwsVcopiarImagenColor         ( contenedorBmp * contenedorEntrada){
+
+            // crear nuevo contendor
+            contenedorBmp * contenedorCopia = FwsVcrearContenedor();
+
+            // copiar propiedades
+            contenedorCopia->imagenAlto  = contenedorEntrada->imagenAlto;
+            contenedorCopia->imagenAncho = contenedorEntrada->imagenAncho;
+            contenedorCopia->imagenClrImp = contenedorEntrada->imagenClrImp;
+
+            contenedorCopia->imagenClrUs = contenedorEntrada->imagenClrUs;
+            contenedorCopia->imagenDEstr = contenedorEntrada->imagenDEstr;
+            contenedorCopia->imagenDims = contenedorEntrada->imagenDims;
+
+            contenedorCopia->imagenDmsMt = contenedorEntrada->imagenDmsMt;
+            contenedorCopia->imagenMtrzPxlB = contenedorEntrada->imagenMtrzPxlB;
+            contenedorCopia->imagenMtrzPxlG = contenedorEntrada->imagenMtrzPxlG;
+            contenedorCopia->imagenMtrzPxlR = contenedorEntrada->imagenMtrzPxlR;
+
+            contenedorCopia->imagenNmPlns = contenedorEntrada->imagenNmPlns;
+            contenedorCopia->imagenPrfClr = contenedorEntrada->imagenPrfClr;
+            contenedorCopia->imagenPxMH = contenedorEntrada->imagenPxMH;
+            contenedorCopia->imagenPxMV = contenedorEntrada->imagenPxMV;
+            contenedorCopia->imagenResrv = contenedorEntrada->imagenResrv;
+
+            strcpy(contenedorCopia->imagenTipo,contenedorEntrada->imagenTipo);
+            contenedorCopia->imagenTpCmp = contenedorEntrada->imagenTpCmp;
+            strcpy(contenedorCopia->nmbrRtSv, contenedorEntrada->nmbrRtSv);
+            strcpy(contenedorCopia->nombreCompleto, contenedorEntrada->nombreCompleto);
+            strcpy(contenedorCopia->nombreImagen,contenedorEntrada->nombreImagen);
+
+            strcpy(contenedorCopia->nombreRuta, contenedorEntrada->nombreRuta);
+            return contenedorCopia;
+
+        }
+
+        /************ peligo **********/
+
+        contenedorBmp *     FwsVguardarImagenBmpColor         ( contenedorBmp * bmpEntrada, char * nombreSalida, char *nombreImagens ){
+
+            // crear el nuevo archivo
+            FILE * nuevaImagenSalida = fopen( nombreSalida, "wb+");
+
+            // verificar si se ha podifo salvar la imagen
+            if ( nuevaImagenSalida ){
+
+                // crear contenedor para la imagen de salida
+                contenedorBmp * nuevoContenedorSalida = FwsVcrearContenedor();
+                nuevoContenedorSalida->nombreRuta   = nombreSalida;
+                nuevoContenedorSalida->nombreImagen = nombreImagens;
+
+                // leer la imagen indicada
+                fseek(nuevaImagenSalida,0,SEEK_SET);
+                fwrite(&bmpEntrada->imagenTipo,sizeof(char),2,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenDims,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenResrv,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenOffst,sizeof(int),1,nuevaImagenSalida);
+
+                fwrite(&bmpEntrada->imagenDmsMt ,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenAlto,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenAncho,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenNmPlns,sizeof(short int),1,nuevaImagenSalida);
+
+                fwrite(&bmpEntrada->imagenPrfClr,sizeof(short int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenTpCmp,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenDEstr,sizeof(int),1,nuevaImagenSalida);
+
+                fwrite(&bmpEntrada->imagenPxMH,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenPxMV,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenClrUs,sizeof(int),1,nuevaImagenSalida);
+                fwrite(&bmpEntrada->imagenClrImp,sizeof(int),1,nuevaImagenSalida);
+
+                // mover la matriz del contenedor de entrada al contenedor de salida
+                int i, j ;
+
+
+
+                for ( i = 0 ; i < bmpEntrada->imagenAlto ; i ++ )
+                {
+                    for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
+                    {
+                        fwrite(&bmpEntrada->imagenMtrzPxlR[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&bmpEntrada->imagenMtrzPxlG[i][j],sizeof(char),1,nuevaImagenSalida);
+                        fwrite(&bmpEntrada->imagenMtrzPxlB[i][j],sizeof(char),1,nuevaImagenSalida);
+
+                    }
+                }
+
+                // cerrar el archivo y regresar estado
+                fclose(nuevaImagenSalida);
+                return nuevoContenedorSalida;
+            }
+            else
+                return NULL;
+        }
+
+
+        // FUNCIONES DE CARGAR Y CREACION DE IMAGENES BMP
+
+        // lista
+
+        contenedorBmp *     FwsVcargarImagenBmpColor          ( char * nombreRutaImagen, char * nombreImagen ){
 
             // intentar cargar ruta especificada
-            FILE * nuevaImagenBmp = fopen( nombreImagen, "rb+");
+            FILE * nuevaImagenBmp = fopen( nombreRutaImagen, "rb+");
             if (  nuevaImagenBmp ){
 
                 // crear contenedor para la nueva imagen
                 contenedorBmp * nuevoContenedor = FwsVcrearContenedor();
 
                 // leer datos extra
-                nuevoContenedor->nombreRuta = nombreImagen;
-                nuevoContenedor->nombreImagen = nombreImagene;
+                nuevoContenedor->nombreRuta = nombreRutaImagen;
+                nuevoContenedor->nombreImagen = nombreImagen;
+
+                //////////nuevoContenedor->nombreCompleto = strcat(nuevoContenedor->nombreRuta,nuevoContenedor->nombreImagen);
 
 
                 // leer imagen BMP
@@ -231,69 +367,32 @@
             return vectorContendores;
         }
 
+        contenedorBmp *     FwsVcrearImagenBmpColor           ( char * nombreImagen, char * nombreRutaImagen, int alto, int ancho ){
+
+            // crear un nuevo contenedor
+            FILE * archivoImagen = fopen(nombreRutaImagen, "w");
+            contenedorBmp * nuevoContenedor = FwsVcrearContenedor();
+
+            // asignar valores
+            nuevoContenedor->imagenAlto = alto;
+            nuevoContenedor->imagenAncho = ancho;
+            nuevoContenedor->imagenDims = alto * ancho;
+
+            nuevoContenedor->nombreImagen = nombreImagen;
+            nuevoContenedor->nombreRuta = nombreRutaImagen;
+            strcpy(nuevoContenedor->imagenTipo,"BM");
+
+            // iniciar las matrices de color
+            nuevoContenedor->imagenMtrzPxlB = FwsVcrearMatriz(alto,ancho);
+            nuevoContenedor->imagenMtrzPxlG = FwsVcrearMatriz(alto,ancho);
+            nuevoContenedor->imagenMtrzPxlR = FwsVcrearMatriz(alto,ancho);
+
+            // escribir la imagen de salida
+            contenedorBmp * imagenSalida = FwsVguardarImagenBmpColor(nuevoContenedor,nombreImagen,nombreRutaImagen);
+
+            return imagenSalida;
+
+        }
 
 
         // FUNIONES DE ESCITURA DE IMAGENES BMP
-        contenedorBmp *     FwsVguardarImagenBmpColor         ( contenedorBmp * bmpEntrada, char * nombreSalida, char *nombreImagens ){
-
-            // crear el nuevo archivo
-            FILE * nuevaImagenSalida = fopen( nombreSalida, "wb+");
-
-            // verificar si se ha podifo salvar la imagen
-            if ( nuevaImagenSalida ){
-
-                // crear contenedor para la imagen de salida
-                contenedorBmp * nuevoContenedorSalida = FwsVcrearContenedor();
-                nuevoContenedorSalida->nombreRuta   = nombreSalida;
-                nuevoContenedorSalida->nombreImagen = nombreImagens;
-
-                // leer la imagen indicada
-                fseek(nuevaImagenSalida,0,SEEK_SET);
-                fwrite(&bmpEntrada->imagenTipo,sizeof(char),2,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenDims,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenResrv,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenOffst,sizeof(int),1,nuevaImagenSalida);
-
-                fwrite(&bmpEntrada->imagenDmsMt ,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenAlto,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenAncho,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenNmPlns,sizeof(short int),1,nuevaImagenSalida);
-
-                fwrite(&bmpEntrada->imagenPrfClr,sizeof(short int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenTpCmp,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenDEstr,sizeof(int),1,nuevaImagenSalida);
-
-                fwrite(&bmpEntrada->imagenPxMH,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenPxMV,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenClrUs,sizeof(int),1,nuevaImagenSalida);
-                fwrite(&bmpEntrada->imagenClrImp,sizeof(int),1,nuevaImagenSalida);
-
-                // mover la matriz del contenedor de entrada al contenedor de salida
-                int i, j ;
-
-
-
-                for ( i = 0 ; i < bmpEntrada->imagenAlto ; i ++ )
-                {
-                    for ( j = 0 ; j < bmpEntrada->imagenAncho ; j ++ )
-                    {
-                        fwrite(&bmpEntrada->imagenMtrzPxlR[i][j],sizeof(char),1,nuevaImagenSalida);
-                        fwrite(&bmpEntrada->imagenMtrzPxlG[i][j],sizeof(char),1,nuevaImagenSalida);
-                        fwrite(&bmpEntrada->imagenMtrzPxlB[i][j],sizeof(char),1,nuevaImagenSalida);
-
-                    }
-                }
-
-                // cerrar el archivo y regresar estado
-                fclose(nuevaImagenSalida);
-                return nuevoContenedorSalida;
-            }
-            else
-                return NULL;
-        }
-
-       // int       guardarImagenesBmp()      ( );
-
-
-
-#endif // FWSVISION_H
